@@ -1,0 +1,17 @@
+.env
+.venv*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# A vault must never be placed in this repository. These names are defensive.
+PersonalKnowledgeVault/
+library/
+.rag/
+chroma/
+manifest.sqlite3

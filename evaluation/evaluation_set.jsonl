@@ -1,0 +1,30 @@
+{"id":"q01","category":"zh_to_zh","question":"王岚是哪天毕业的？","expected_paths":["library/chinese-notes.md"],"expected_fact":"2024年6月28日","expected_language":"zh"}
+{"id":"q02","category":"zh_to_zh","question":"王岚学的是什么专业？","expected_paths":["library/chinese-notes.md"],"expected_fact":"环境工程","expected_language":"zh"}
+{"id":"q03","category":"zh_to_zh","question":"王岚最喜欢什么花？","expected_paths":["library/chinese-notes.md"],"expected_fact":"桂花","expected_language":"zh"}
+{"id":"q04","category":"zh_to_zh","question":"杭州旅行从什么时候到什么时候？","expected_paths":["library/chinese-notes.md"],"expected_fact":"2026年11月3日至11月7日","expected_language":"zh"}
+{"id":"q05","category":"zh_to_zh","question":"杭州旅行住哪家酒店？","expected_paths":["library/chinese-notes.md"],"expected_fact":"青竹酒店","expected_language":"zh"}
+{"id":"q06","category":"zh_to_zh","question":"去杭州的高铁车次是什么？","expected_paths":["library/chinese-notes.md"],"expected_fact":"G7312","expected_language":"zh"}
+{"id":"q07","category":"en_to_en","question":"When is Mei Lin's birthday?","expected_paths":["library/english-notes.md"],"expected_fact":"August 7","expected_language":"en"}
+{"id":"q08","category":"en_to_en","question":"What cake does Mei Lin prefer?","expected_paths":["library/english-notes.md"],"expected_fact":"lemon chiffon","expected_language":"en"}
+{"id":"q09","category":"en_to_en","question":"Who owns Project Cedar?","expected_paths":["library/english-notes.md"],"expected_fact":"Daniel Cho","expected_language":"en"}
+{"id":"q10","category":"en_to_en","question":"What is Project Cedar's budget?","expected_paths":["library/english-notes.md"],"expected_fact":"USD 18,400","expected_language":"en"}
+{"id":"q11","category":"en_to_en","question":"Where does the Riverside book club meet?","expected_paths":["library/english-notes.md"],"expected_fact":"Room 204","expected_language":"en"}
+{"id":"q12","category":"en_to_en","question":"What is the Riverside club's September book?","expected_paths":["library/english-notes.md"],"expected_fact":"The Left Hand of Darkness","expected_language":"en"}
+{"id":"q13","category":"zh_to_en","question":"Mei Lin 的生日是哪天？","expected_paths":["library/english-notes.md"],"expected_fact":"8月7日","expected_language":"zh"}
+{"id":"q14","category":"zh_to_en","question":"Cedar 项目的负责人是谁？","expected_paths":["library/english-notes.md"],"expected_fact":"Daniel Cho","expected_language":"zh"}
+{"id":"q15","category":"zh_to_en","question":"Riverside 读书会几点开始？","expected_paths":["library/english-notes.md"],"expected_fact":"19:30","expected_language":"zh"}
+{"id":"q16","category":"zh_to_en","question":"徒步小组的紧急联系人是谁？","expected_paths":["library/english-notes.md"],"expected_fact":"Priya Nair","expected_language":"zh"}
+{"id":"q17","category":"en_to_zh","question":"Which university did Wang Lan graduate from?","expected_paths":["library/chinese-notes.md"],"expected_fact":"Haizhou University","expected_language":"en"}
+{"id":"q18","category":"en_to_zh","question":"What train is booked for the Hangzhou trip?","expected_paths":["library/chinese-notes.md"],"expected_fact":"G7312","expected_language":"en"}
+{"id":"q19","category":"en_to_zh","question":"At what time is the family dinner?","expected_paths":["library/chinese-notes.md"],"expected_fact":"6:00 PM on Saturday","expected_language":"en"}
+{"id":"q20","category":"en_to_zh","question":"How many books are planned each month?","expected_paths":["library/chinese-notes.md"],"expected_fact":"two","expected_language":"en"}
+{"id":"q21","category":"multiple_facts","question":"Summarize Project Cedar's owner, date, and budget.","expected_paths":["library/english-notes.md","library/current-plan.txt"],"expected_fact":"Daniel Cho; October 12, 2026; USD 18,400","expected_language":"en"}
+{"id":"q22","category":"multiple_facts","question":"请总结杭州旅行的日期、酒店和车次。","expected_paths":["library/chinese-notes.md"],"expected_fact":"2026年11月3日至11月7日；青竹酒店；G7312","expected_language":"zh"}
+{"id":"q23","category":"numbers","question":"How long is the hiking group's blue route?","expected_paths":["library/english-notes.md"],"expected_fact":"8.5 kilometers","expected_language":"en"}
+{"id":"q24","category":"numbers","question":"家庭聚餐要准备多少把普通椅子？","expected_paths":["library/chinese-notes.md"],"expected_fact":"六把","expected_language":"zh"}
+{"id":"q25","category":"absent","question":"What is Mei Lin's phone number?","expected_paths":[],"expected_fact":"insufficient evidence","expected_language":"en"}
+{"id":"q26","category":"absent","question":"王岚的身份证号码是什么？","expected_paths":[],"expected_fact":"信息不足","expected_language":"zh"}
+{"id":"q27","category":"conflict","question":"What is the active Project Cedar delivery date?","expected_paths":["library/current-plan.txt","library/old-plan.txt"],"expected_fact":"October 12, 2026, while noting the superseded October 5 note","expected_language":"en"}
+{"id":"q28","category":"conflict","question":"Cedar 项目的当前交付日期是哪天？","expected_paths":["library/current-plan.txt","library/old-plan.txt"],"expected_fact":"2026年10月12日，并说明旧计划为10月5日","expected_language":"zh"}
+{"id":"q29","category":"edited_document","question":"After changing Mei Lin's birthday from August 7 to August 9, what date is retrieved?","expected_paths":["library/english-notes.md"],"expected_fact":"August 9 only; no stale August 7 passage","expected_language":"en"}
+{"id":"q30","category":"deleted_document","question":"After deleting old-plan.txt, is October 5 still retrieved as a Cedar date?","expected_paths":["library/current-plan.txt"],"expected_fact":"No; deleted source and its chunks are absent","expected_language":"en"}

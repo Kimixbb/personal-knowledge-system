@@ -1,0 +1,6 @@
+- Use Red/Green TDD when implementing new features or bug fixes that require heavy work.
+- Commit changes when a task/phase/feature finishes.
+- If changing this rule would affect several systems or substantially change what the player understands and does, document or modify it in /docs. If changing it would only affect the code or balance, keep it out of the durable design docs.
+- Follow git message conventions. Be detailed in the message body.
+- Keep code changes concise but accurate. Reuse codes if available rather than writing new codes.
+- Maintain WORKLOG.md as a long-term, append-only record. After each meaningful work session, add a dated entry summarizing the current task or phase, progress, decisions, blockers, and next steps—never delete or overwrite previous logs.
