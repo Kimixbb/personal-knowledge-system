@@ -45,6 +45,8 @@ The first document indexing operation downloads `Qwen/Qwen3-Embedding-0.6B`. The
 
 The default embedding revision is an immutable Hugging Face commit rather than the moving `main` branch. Changing that revision is treated as incompatible and requires a full rebuild, preventing vectors from different model snapshots from being mixed.
 
+The default chunking window is 300 embedding-model tokens with 50 tokens of overlap. This reduces how much unrelated page content can dilute narrow facts while retaining neighboring context for grounded answers. Changing either value requires **Rebuild Index**.
+
 ## Vault contract
 
 The application creates this structure outside the repository:
@@ -101,6 +103,8 @@ Live Qwen/Chroma and hosted-provider checks require the normal application depen
 ## Evaluation
 
 [`evaluation/evaluation_set.jsonl`](evaluation/evaluation_set.jsonl) contains 30 manually checked bilingual scenarios against the included synthetic fixture vault. Copy `evaluation/fixture_vault/library` into a disposable vault, index it, then ask the questions independently. Record whether an expected path appears in the top five (`Recall@5`) and assess answer faithfulness, citation correctness, response language, refusal behavior, conflicts, edits, deletions, and stale-data removal.
+
+[`evaluation/personal_vault_evaluation_set.jsonl`](evaluation/personal_vault_evaluation_set.jsonl) contains retrieval regressions discovered in the user-owned personal vault. These cases are manual evaluations, not unit tests, and require the named source documents to be present locally.
 
 ## MVP boundaries
 

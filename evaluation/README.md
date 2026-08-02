@@ -9,3 +9,7 @@
 7. For q30, delete `old-plan.txt`, ask without refreshing manually, and confirm neither its path nor its old fact appears.
 
 Recall@5 is `questions with the required passage in the top five / applicable questions`. Keep conflicts as separate qualitative checks because both old and current passages are intentionally relevant.
+
+## Personal-vault regressions
+
+`personal_vault_evaluation_set.jsonl` records retrieval failures found against the user-owned vault. Run these separately from the synthetic fixture benchmark because their source documents are not committed to this repository. For each case, use the configured personal vault, rebuild after any chunking change, ask the question independently, and record whether the expected path and fact appear in the retrieved passages and grounded answer.

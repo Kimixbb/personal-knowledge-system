@@ -52,8 +52,8 @@ class Settings:
     openai_compatible_base_url: str = ""
     retrieval_top_k: int = 5
     retrieval_min_score: float = 0.2
-    chunk_size: int = 700
-    chunk_overlap: int = 100
+    chunk_size: int = 300
+    chunk_overlap: int = 50
     collection_name: str = "personal_rag_qwen3_06b_v1"
     chunking_version: str = "multilingual_qwen_tokens_v1"
 
@@ -105,8 +105,8 @@ class Settings:
             ).strip(),
             retrieval_top_k=_as_positive_int(merged, "RETRIEVAL_TOP_K", 5),
             retrieval_min_score=_as_float(merged, "RETRIEVAL_MIN_SCORE", 0.2),
-            chunk_size=_as_positive_int(merged, "CHUNK_SIZE", 700),
-            chunk_overlap=_as_positive_int(merged, "CHUNK_OVERLAP", 100),
+            chunk_size=_as_positive_int(merged, "CHUNK_SIZE", 300),
+            chunk_overlap=_as_positive_int(merged, "CHUNK_OVERLAP", 50),
         )
         settings.validate()
         repository_root = Path(env_file).resolve(strict=False).parent

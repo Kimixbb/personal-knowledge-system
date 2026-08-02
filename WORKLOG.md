@@ -39,3 +39,11 @@
 - Decisions: Preserve the user's most recent visible result across ordinary reruns while treating newly added diagnostic fields as optional during an in-process code upgrade.
 - Blockers: A complete process restart remains necessary to reload the updated `RAGService` module and capture hosted response text for new questions.
 - Next steps: Stop the existing Streamlit server with `Ctrl+C`, start it again, and repeat the question.
+
+## 2026-08-02 — Personal-vault chunking evaluation
+
+- Task/phase: Reduce dense-retrieval chunk dilution and preserve the reported Charlie query as a manual personal-vault regression rather than a unit test.
+- Progress: Changed the default and active chunk configuration from 700/100 to 300/50 tokens; documented the new rebuild requirement; added a separate `personal_vault_evaluation_set.jsonl`; rebuilt the CUDA-backed Chroma collection cleanly; and verified 4 indexed documents, 4,636 manifest chunks, 4,636 vectors, valid JSONL, and 42 passing unit tests.
+- Decisions: Keep the synthetic 30-case evaluation fixture unchanged; store user-owned corpus regressions separately; use the smallest values inside the agreed 300–400/50–75 range after 350/60 left a 248-word multi-topic chunk; and report retrieval measurements without promoting the example into the unit suite.
+- Blockers: The exact question still does not retrieve the page-70 Charlie passage in the top 200, so smaller chunks alone do not resolve this semantic mismatch.
+- Next steps: Treat `pv01` as a red manual evaluation and, when authorized, test the next recall strategy such as query expansion, adjacent-chunk retrieval, or hybrid lexical-plus-dense search.
