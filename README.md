@@ -10,7 +10,9 @@ This end-to-end example shows the app synchronizing the vault, combining semanti
 
 ![Personal RAG question-to-citation flow](docs/assets/question-answer-flow.gif)
 
-Demo question: “What is the name of the luxury brand that had a naming problem because its customers were female, but the name indicated male?” The grounded answer is **Charlie**, Revlon’s perfume, cited to the relevant passage in *Positioning: The Battle for Your Mind*.
+Demo question: “What is the name of the luxury brand that had a naming problem because its customers were female, but the name indicated male?” The grounded answer is **Charlie**, Revlon’s women’s perfume, cited to the relevant passage in *Positioning: The Battle for Your Mind*.
+
+> **Correction:** The question contains a false premise. Charlie did **not** have a naming problem. The book presents its masculine name as intentional, successful counter-positioning against the perfume category’s convention of feminine brand names. The GIF preserves the original wording because it records the original retrieval test.
 
 ## Requirements
 

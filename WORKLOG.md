@@ -96,3 +96,11 @@
 - Decisions: Keep the demo focused on one deterministic question and show both the user-facing answer and transparent retrieval evidence. Store the generated artifact under `docs/assets` so the README remains portable.
 - Blockers: None.
 - Next steps: Re-record the GIF only when the visible question flow changes materially.
+
+## 2026-08-02 - Correct README demo premise
+
+- Task/phase: Clarify the interpretation of Charlie’s masculine perfume name in the README demo.
+- Progress: Reviewed the prior “Identify luxury brand naming issue” task and added a prominent correction explaining that *Positioning* describes Charlie as successful counter-positioning, not as a naming problem.
+- Decisions: Preserve the original question inside the GIF as an authentic record of the retrieval test, while explicitly labeling its premise as false in the surrounding documentation.
+- Blockers: None.
+- Next steps: None.
