@@ -1,14 +1,20 @@
-# Evaluation procedure
+# Automated fixture benchmark
 
-1. Use a disposable external vault and copy `fixture_vault/library` into it.
-2. Start Personal RAG and rebuild the index.
-3. Ask each question in `evaluation_set.jsonl` as an independent question.
-4. Mark a Recall@5 hit when every required `expected_paths` entry appears among the five retrieved paths. For absent-information cases, verify that the app refuses rather than calling unsupported facts an answer.
-5. Record answer faithfulness, citation correctness, same-language behavior, and the expected fact manually.
-6. For q29, edit the birthday in `english-notes.md`, save, and ask without refreshing manually. Confirm the retrieved chunks contain only the new date.
-7. For q30, delete `old-plan.txt`, ask without refreshing manually, and confirm neither its path nor its old fact appears.
+Run all 30 synthetic-fixture cases from the repository root:
 
-Recall@5 is `questions with the required passage in the top five / applicable questions`. Keep conflicts as separate qualitative checks because both old and current passages are intentionally relevant.
+```powershell
+.\.venv313\Scripts\python.exe -m personal_rag.evaluation
+```
+
+The command uses the model, revision, device, dimensions, chunking, and minimum score from `.env`, while forcing `top_k=5` for the benchmark. It creates a disposable vault outside the repository, copies `fixture_vault/library`, rebuilds the Chroma index, synchronizes before every question, and runs the current hybrid dense-plus-BM25 retriever. It does not use a provider API key or send fixture text to a hosted model.
+
+The q29 `replace_text` and q30 `delete` setup actions are declared in `evaluation_set.jsonl` and applied automatically. Their forbidden text and path checks catch stale chunks. Every result includes ranks, paths, scores, chunk IDs, and retrieved content in a timestamped JSON report under the git-ignored `evaluation/results` directory.
+
+The command exits `0` when all automated checks pass and `1` when any fails. Recall@5 is calculated over 26 applicable cases: absent-information cases q25/q26 and conflicting-source cases q27/q28 are excluded. The conflict cases still require both paths in the top five. q25/q26 appear as `REVIEW` because refusal quality requires an answer model.
+
+Use `--output <path>` to choose the report location, `--top-k <number>` for exploratory retrieval runs, or `--work-dir <new-path>` to retain the generated benchmark vault. A supplied work directory must not already exist.
+
+Hosted answer faithfulness, citation correctness, same-language behavior, refusal behavior, and conflict resolution remain manual checks in the Streamlit app. The expected facts and retrieved passages in the JSON report support that review.
 
 ## Personal-vault regressions
 

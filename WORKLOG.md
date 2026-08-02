@@ -120,3 +120,11 @@
 - Decisions: Treat no relevant passages and insufficient evidence as normal completed outcomes; preserve source passages for insufficient-evidence and refusal inspection; keep genuinely uncited factual answers as citation-validation errors.
 - Blockers: None.
 - Next steps: Restart the Streamlit app so the updated result model and status rendering are loaded.
+
+## 2026-08-02 — Automated 30-case retrieval benchmark
+
+- Task/phase: Replace the manual synthetic-fixture procedure with an executable benchmark against the current knowledge-base implementation.
+- Progress: Added a UTF-8 JSONL loader and validator, isolated disposable-vault setup, real Qwen/Chroma/chunking/synchronization/hybrid-retrieval execution, data-driven q29 edit and q30 delete mutations, required-path and stale-evidence checks, concise terminal results, timestamped JSON reports, and focused regression coverage. Generated benchmark reports are ignored by Git.
+- Decisions: Keep the default benchmark deterministic and free of provider charges; execute but mark q25/q26 for manual hosted-answer review; exclude absent and conflict cases from the formal 26-case Recall@5 denominator while still requiring both conflict paths in automated checks; never touch the configured personal vault.
+- Validation: The live current-stack run completed all 30 cases with 28/28 automated checks passing and Recall@5 of 26/26 (100%). The two absent-information cases were recorded for review, and the complete unit suite passes with 67 tests.
+- Next steps: Use the JSON reports to compare future retrieval changes. Add opt-in hosted-answer evaluation only if provider cost and a grading policy are explicitly accepted.

@@ -116,7 +116,15 @@ Live Qwen/Chroma and hosted-provider checks require the normal application depen
 
 ## Evaluation
 
-[`evaluation/evaluation_set.jsonl`](evaluation/evaluation_set.jsonl) contains 30 manually checked bilingual scenarios against the included synthetic fixture vault. Copy `evaluation/fixture_vault/library` into a disposable vault, index it, then ask the questions independently. Record whether an expected path appears in the top five (`Recall@5`) and assess answer faithfulness, citation correctness, response language, refusal behavior, conflicts, edits, deletions, and stale-data removal.
+[`evaluation/evaluation_set.jsonl`](evaluation/evaluation_set.jsonl) contains 30 bilingual scenarios against the included synthetic fixture vault. Run the automated retrieval benchmark from the repository root:
+
+```powershell
+.\.venv313\Scripts\python.exe -m personal_rag.evaluation
+```
+
+The runner copies the fixture into an isolated temporary vault, rebuilds it with the current embedding, chunking, Chroma, synchronization, and hybrid-retrieval implementation, and executes all 30 cases at `top_k=5`. It applies the q29 edit and q30 deletion automatically, checks required paths and stale evidence, prints a concise result, and writes a detailed ignored JSON report under `evaluation/results`. It exits with a nonzero status when an automated check fails and never calls a hosted model or touches the configured personal vault.
+
+The 26-case Recall@5 metric excludes the two absent-information and two conflicting-source cases. The conflict cases still receive automated path checks. The absent-information cases are executed and recorded as `REVIEW` because verifying that a hosted answer refuses unsupported claims cannot be determined from retrieval paths alone. Answer faithfulness, citation correctness, response language, and conflict handling remain manual hosted-model checks.
 
 [`evaluation/personal_vault_evaluation_set.jsonl`](evaluation/personal_vault_evaluation_set.jsonl) contains retrieval regressions discovered in the user-owned personal vault. These cases are manual evaluations, not unit tests, and require the named source documents to be present locally.
 
