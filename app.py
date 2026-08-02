@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import PurePosixPath
 
 import streamlit as st
@@ -20,9 +21,13 @@ from personal_rag.rag_service import QuestionStage, RAGResult, RAGService
 from personal_rag.retrieval import Retriever
 from personal_rag.synchronizer import (
     IndexConfigurationMismatch,
+    SyncProgress,
+    SyncProgressCallback,
+    SyncResult,
     SynchronizationError,
     Synchronizer,
 )
+from personal_rag.ui_progress import sync_progress_label
 from personal_rag.vector_store import ChromaVectorStore
 
 
@@ -59,18 +64,54 @@ def build_runtime(settings: Settings):  # type: ignore[no-untyped-def]
     return manifest, synchronizer, RAGService(synchronizer, retriever), embeddings
 
 
-def show_sync_result(result) -> None:  # type: ignore[no-untyped-def]
-    if result.errors:
-        st.error("Synchronization did not complete safely. Questions are blocked.")
-        for error in result.errors:
-            st.write(f"• {error}")
-        return
-    st.success(
+def sync_result_label(result: SyncResult) -> str:
+    return (
         "Synchronization complete — "
         f"{result.added} added, {result.changed} changed, "
         f"{result.deleted} deleted, {result.skipped} unchanged, "
         f"{result.empty} empty."
     )
+
+
+def show_sync_result(result: SyncResult) -> None:
+    if result.errors:
+        st.error("Synchronization did not complete safely. Questions are blocked.")
+        for error in result.errors:
+            st.write(f"• {error}")
+        return
+    st.success(sync_result_label(result))
+
+
+def run_sync_with_status(
+    initial_label: str,
+    operation: Callable[[SyncProgressCallback], SyncResult],
+    embeddings: Qwen3Embeddings,
+) -> SyncResult:
+    current_task = [initial_label]
+    sync_status = st.status(initial_label, expanded=False, type="compact")
+
+    def show_progress(progress: SyncProgress) -> None:
+        label = sync_progress_label(
+            progress,
+            embedding_device=embeddings.active_device,
+            model_loaded=embeddings.is_model_loaded,
+        )
+        current_task[0] = label
+        sync_status.update(label=label)
+
+    try:
+        result = operation(show_progress)
+    except Exception:
+        task = current_task[0].removesuffix("…").lower()
+        sync_status.update(label=f"Synchronization failed while {task}.", state="error")
+        raise
+
+    if result.successful:
+        sync_status.update(label=sync_result_label(result), state="complete")
+    else:
+        task = current_task[0].removesuffix("…").lower()
+        sync_status.update(label=f"Synchronization failed while {task}.", state="error")
+    return result
 
 
 def render_result(result: RAGResult, settings: Settings) -> None:
@@ -223,11 +264,18 @@ with st.sidebar:
 
     st.header("Actions")
     if st.button("Refresh Index", width="stretch"):
-        with st.spinner("Synchronizing the vault…"):
-            try:
-                show_sync_result(synchronizer.sync_library())
-            except IndexConfigurationMismatch as exc:
-                st.error(str(exc))
+        try:
+            sync_result = run_sync_with_status(
+                "Preparing to synchronize the vault…",
+                lambda on_progress: synchronizer.sync_library(
+                    on_progress=on_progress
+                ),
+                embeddings,
+            )
+            if sync_result.errors:
+                show_sync_result(sync_result)
+        except IndexConfigurationMismatch as exc:
+            st.error(str(exc))
 
     confirm_rebuild = st.checkbox("I understand rebuild removes and recreates all vectors")
     if st.button(
@@ -235,8 +283,15 @@ with st.sidebar:
         disabled=not confirm_rebuild,
         width="stretch",
     ):
-        with st.spinner("Rebuilding the local index…"):
-            show_sync_result(synchronizer.rebuild_index())
+        sync_result = run_sync_with_status(
+            "Preparing to rebuild the local index…",
+            lambda on_progress: synchronizer.rebuild_index(
+                on_progress=on_progress
+            ),
+            embeddings,
+        )
+        if sync_result.errors:
+            show_sync_result(sync_result)
 
 
 st.header("Import Files")
@@ -266,10 +321,16 @@ if st.button("Import selected files", disabled=not uploads):
         except (UnsupportedUploadError, UnsafePathError, OSError) as exc:
             rejected.append(f"{upload.name}: {type(exc).__name__}")
     if imported:
-        with st.spinner("Indexing imported files…"):
-            sync_result = synchronizer.sync_library()
+        sync_result = run_sync_with_status(
+            "Preparing imported files for indexing…",
+            lambda on_progress: synchronizer.sync_library(
+                on_progress=on_progress
+            ),
+            embeddings,
+        )
         st.success("Imported: " + ", ".join(imported))
-        show_sync_result(sync_result)
+        if sync_result.errors:
+            show_sync_result(sync_result)
     for item in rejected:
         st.error(item)
 
@@ -285,8 +346,13 @@ for filename in list(st.session_state.pending_uploads):
                 settings.temp_dir,
                 replace=True,
             )
-            with st.spinner("Replacing and re-indexing the document…"):
-                sync_result = synchronizer.sync_library()
+            sync_result = run_sync_with_status(
+                "Preparing the replacement for indexing…",
+                lambda on_progress: synchronizer.sync_library(
+                    on_progress=on_progress
+                ),
+                embeddings,
+            )
             del st.session_state.pending_uploads[filename]
             if sync_result.successful:
                 st.success(f"Replaced and synchronized {filename}.")
@@ -294,7 +360,8 @@ for filename in list(st.session_state.pending_uploads):
                 st.error(
                     f"{filename} was replaced, but indexing failed. Questions are blocked."
                 )
-            show_sync_result(sync_result)
+            if sync_result.errors:
+                show_sync_result(sync_result)
         except Exception as exc:
             st.error(f"Replacement failed ({type(exc).__name__}).")
     if cancel_column.button("Cancel", key=f"cancel-{filename}"):

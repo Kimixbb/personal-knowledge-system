@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from enum import StrEnum
 from pathlib import Path
 from typing import Protocol
 
@@ -34,6 +35,32 @@ class MutableVectorStore(Protocol):
     def delete_document(self, document_id: str) -> None: ...
 
     def rebuild_collection(self) -> None: ...
+
+
+class SyncStage(StrEnum):
+    VERIFYING_INDEX = "verifying_index"
+    SCANNING = "scanning"
+    CHECKING = "checking"
+    HASHING = "hashing"
+    EXTRACTING = "extracting"
+    CHUNKING = "chunking"
+    INDEXING = "indexing"
+    RECORDING = "recording"
+    REMOVING = "removing"
+    FINALIZING = "finalizing"
+    RESETTING = "resetting"
+
+
+@dataclass(frozen=True, slots=True)
+class SyncProgress:
+    stage: SyncStage
+    relative_path: str | None = None
+    file_index: int | None = None
+    file_count: int | None = None
+    chunk_count: int | None = None
+
+
+SyncProgressCallback = Callable[[SyncProgress], None]
 
 
 @dataclass(slots=True)
@@ -139,9 +166,25 @@ class Synchronizer:
         relative_path: str,
         existing: DocumentRecord | None,
         result: SyncResult,
+        on_progress: SyncProgressCallback | None,
+        file_index: int,
+        file_count: int,
     ) -> None:
         document_id = stable_document_id(relative_path)
         known_hash = ""
+
+        def report(stage: SyncStage, *, chunk_count: int | None = None) -> None:
+            if on_progress is not None:
+                on_progress(
+                    SyncProgress(
+                        stage=stage,
+                        relative_path=relative_path,
+                        file_index=file_index,
+                        file_count=file_count,
+                        chunk_count=chunk_count,
+                    )
+                )
+
         try:
             stat = path.stat()
             if (
@@ -153,6 +196,7 @@ class Synchronizer:
                 result.skipped += 1
                 return
 
+            report(SyncStage.HASHING)
             known_hash = content_hash(path)
             if (
                 existing is not None
@@ -176,7 +220,9 @@ class Synchronizer:
                 result.skipped += 1
                 return
 
+            report(SyncStage.EXTRACTING)
             extracted = self.loader(path, relative_path)
+            report(SyncStage.CHUNKING)
             chunks = self.chunker.split(extracted)
             chunk_ids: list[str] = []
             for chunk_index, chunk in enumerate(chunks):
@@ -193,11 +239,11 @@ class Synchronizer:
                 )
                 chunk_ids.append(chunk_id)
 
-            self.vector_store.replace_document(
-                document_id, chunks, chunk_ids
-            )
+            report(SyncStage.INDEXING, chunk_count=len(chunks))
+            self.vector_store.replace_document(document_id, chunks, chunk_ids)
             status = "indexed" if chunks else "empty"
             indexed_at = _now()
+            report(SyncStage.RECORDING, chunk_count=len(chunks))
             self.manifest.upsert(
                 DocumentRecord(
                     document_id=document_id,
@@ -232,7 +278,14 @@ class Synchronizer:
             result.failed += 1
             result.errors.append(f"{relative_path}: {type(exc).__name__}")
 
-    def sync_library(self, *, raise_on_errors: bool = False) -> SyncResult:
+    def sync_library(
+        self,
+        *,
+        raise_on_errors: bool = False,
+        on_progress: SyncProgressCallback | None = None,
+    ) -> SyncResult:
+        if on_progress is not None:
+            on_progress(SyncProgress(stage=SyncStage.VERIFYING_INDEX))
         self._ensure_compatible_index()
         result = SyncResult()
         existing_by_path = {
@@ -242,6 +295,8 @@ class Synchronizer:
         current_document_ids: set[str] = set()
 
         try:
+            if on_progress is not None:
+                on_progress(SyncProgress(stage=SyncStage.SCANNING))
             files = sorted(
                 iter_library_files(self.settings.library_dir, self.settings.vault_path),
                 key=lambda path: str(path).casefold(),
@@ -253,7 +308,8 @@ class Synchronizer:
                 raise SynchronizationError(result) from exc
             return result
 
-        for path in files:
+        file_count = len(files)
+        for file_index, path in enumerate(files, start=1):
             try:
                 relative_path = relative_source_path(path, self.settings.vault_path)
             except Exception as exc:
@@ -262,11 +318,23 @@ class Synchronizer:
                 continue
             current_paths.add(relative_path)
             current_document_ids.add(stable_document_id(relative_path))
+            if on_progress is not None:
+                on_progress(
+                    SyncProgress(
+                        stage=SyncStage.CHECKING,
+                        relative_path=relative_path,
+                        file_index=file_index,
+                        file_count=file_count,
+                    )
+                )
             self._process_file(
                 path,
                 relative_path,
                 existing_by_path.get(relative_path),
                 result,
+                on_progress,
+                file_index,
+                file_count,
             )
 
         for relative_path, record in existing_by_path.items():
@@ -276,6 +344,13 @@ class Synchronizer:
             ):
                 continue
             try:
+                if on_progress is not None:
+                    on_progress(
+                        SyncProgress(
+                            stage=SyncStage.REMOVING,
+                            relative_path=relative_path,
+                        )
+                    )
                 self.vector_store.delete_document(record.document_id)
                 self.manifest.delete(record.document_id)
                 result.deleted += 1
@@ -283,6 +358,8 @@ class Synchronizer:
                 result.failed += 1
                 result.errors.append(f"{relative_path}: {type(exc).__name__}")
 
+        if on_progress is not None:
+            on_progress(SyncProgress(stage=SyncStage.FINALIZING))
         result.completed_at = _now()
         if result.successful:
             self.manifest.set_state("last_sync", result.completed_at)
@@ -290,8 +367,12 @@ class Synchronizer:
             raise SynchronizationError(result)
         return result
 
-    def rebuild_index(self) -> SyncResult:
+    def rebuild_index(
+        self, *, on_progress: SyncProgressCallback | None = None
+    ) -> SyncResult:
+        if on_progress is not None:
+            on_progress(SyncProgress(stage=SyncStage.RESETTING))
         self.vector_store.rebuild_collection()
         self.manifest.clear_documents()
         self.manifest.replace_index_metadata(self.settings.index_metadata)
-        return self.sync_library(raise_on_errors=False)
+        return self.sync_library(raise_on_errors=False, on_progress=on_progress)

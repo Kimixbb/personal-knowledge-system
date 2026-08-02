@@ -11,6 +11,8 @@ from personal_rag.loaders import DocumentLoadError
 from personal_rag.manifest import Manifest
 from personal_rag.synchronizer import (
     IndexConfigurationMismatch,
+    SyncProgress,
+    SyncStage,
     SynchronizationError,
     Synchronizer,
 )
@@ -94,6 +96,53 @@ def test_indexes_new_file_then_skips_unchanged_file(tmp_path: Path) -> None:
     assert next(iter(vectors.documents.values()))[0].page_content.endswith("August 1.")
 
 
+def test_sync_progress_reports_real_file_processing_stages_in_order(
+    tmp_path: Path,
+) -> None:
+    settings, _, _, synchronizer = make_synchronizer(tmp_path)
+    source = settings.inbox_dir / "notes.md"
+    source.write_text("Birthday is August 1.", encoding="utf-8")
+    progress: list[SyncProgress] = []
+
+    synchronizer.sync_library(on_progress=progress.append)
+
+    assert [item.stage for item in progress] == [
+        SyncStage.VERIFYING_INDEX,
+        SyncStage.SCANNING,
+        SyncStage.CHECKING,
+        SyncStage.HASHING,
+        SyncStage.EXTRACTING,
+        SyncStage.CHUNKING,
+        SyncStage.INDEXING,
+        SyncStage.RECORDING,
+        SyncStage.FINALIZING,
+    ]
+    file_progress = progress[2:-1]
+    assert all(item.relative_path == "library/inbox/notes.md" for item in file_progress)
+    assert all(item.file_index == 1 for item in file_progress)
+    assert all(item.file_count == 1 for item in file_progress)
+    assert progress[6].chunk_count == 1
+
+
+def test_sync_progress_skips_expensive_stages_for_unchanged_files(
+    tmp_path: Path,
+) -> None:
+    settings, _, _, synchronizer = make_synchronizer(tmp_path)
+    source = settings.inbox_dir / "notes.md"
+    source.write_text("unchanged", encoding="utf-8")
+    synchronizer.sync_library()
+    progress: list[SyncProgress] = []
+
+    synchronizer.sync_library(on_progress=progress.append)
+
+    assert [item.stage for item in progress] == [
+        SyncStage.VERIFYING_INDEX,
+        SyncStage.SCANNING,
+        SyncStage.CHECKING,
+        SyncStage.FINALIZING,
+    ]
+
+
 def test_birthday_change_replaces_all_stale_chunks(tmp_path: Path) -> None:
     settings, manifest, vectors, synchronizer = make_synchronizer(tmp_path)
     source = settings.inbox_dir / "birthday.md"
@@ -130,6 +179,31 @@ def test_deleted_file_removes_vectors_and_manifest_entry(tmp_path: Path) -> None
     assert result.deleted == 1
     assert manifest.all_documents() == []
     assert vectors.documents == {}
+
+
+def test_sync_progress_reports_deleted_document_removal(tmp_path: Path) -> None:
+    settings, _, _, synchronizer = make_synchronizer(tmp_path)
+    source = settings.inbox_dir / "delete-me.txt"
+    source.write_text("temporary", encoding="utf-8")
+    synchronizer.sync_library()
+    source.unlink()
+    progress: list[SyncProgress] = []
+
+    synchronizer.sync_library(on_progress=progress.append)
+
+    removal = next(item for item in progress if item.stage is SyncStage.REMOVING)
+    assert removal.relative_path == "library/inbox/delete-me.txt"
+
+
+def test_rebuild_progress_starts_with_collection_reset(tmp_path: Path) -> None:
+    settings, _, _, synchronizer = make_synchronizer(tmp_path)
+    (settings.inbox_dir / "notes.md").write_text("hello", encoding="utf-8")
+    progress: list[SyncProgress] = []
+
+    synchronizer.rebuild_index(on_progress=progress.append)
+
+    assert progress[0].stage is SyncStage.RESETTING
+    assert progress[1].stage is SyncStage.VERIFYING_INDEX
 
 
 def test_changed_document_failure_keeps_old_vectors_and_blocks_question(

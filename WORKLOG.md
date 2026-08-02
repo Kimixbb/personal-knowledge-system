@@ -64,3 +64,11 @@
 - Decisions: Keep stage reporting optional and side-effect free outside the GUI, and report only real operation boundaries rather than simulated percentages.
 - Blockers: None.
 - Next steps: Restart or refresh the running Streamlit app and ask a question to confirm that each live stage is visible with the configured provider.
+
+## 2026-08-02 — Precise import and synchronization status
+
+- Task/phase: Replace generic import, replacement, refresh, and rebuild spinners with accurate live synchronization feedback.
+- Progress: Added typed synchronization events for index verification, vault scanning, per-file checks, hashing, CPU extraction, CPU tokenization/chunking, embedding and vector writes, manifest recording, deleted-document cleanup, rebuild reset, and finalization. The Streamlit status now includes the current file number and name, real chunk counts, the active CPU/CUDA device, and whether the lazy embedding model must first be loaded. Added focused regression coverage and verified all 55 tests pass.
+- Decisions: Report only real synchronous boundaries rather than simulated percentages; keep unchanged-file scans concise by omitting stages that do not run; and preserve the separately committed question-processing status behavior.
+- Blockers: A running Streamlit process would require one restart to load the new synchronization callback API. No app was listening during final validation.
+- Next steps: Start Streamlit and import a document to visually confirm the live labels against CPU, disk, and GPU activity.

@@ -44,6 +44,10 @@ class Qwen3Embeddings(Embeddings):
             self._device = self._resolve_device()
         return self._device
 
+    @property
+    def is_model_loaded(self) -> bool:
+        return self._model is not None
+
     def _resolve_device(self) -> str:
         if self.requested_device != "cuda":
             return "cpu"

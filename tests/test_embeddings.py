@@ -17,6 +17,16 @@ class FakeSentenceTransformer:
         return FakeArray([[1.0, 0.0] for _ in texts])
 
 
+def test_model_loaded_state_reflects_lazy_initialization() -> None:
+    embeddings = Qwen3Embeddings(device="cpu", dimensions=2)
+
+    assert embeddings.is_model_loaded is False
+
+    embeddings._model = FakeSentenceTransformer()
+
+    assert embeddings.is_model_loaded is True
+
+
 def test_documents_are_raw_but_queries_receive_qwen_instruction() -> None:
     embeddings = Qwen3Embeddings(device="cpu", dimensions=2)
     fake = FakeSentenceTransformer()
