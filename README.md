@@ -6,13 +6,13 @@ The MVP is deliberately stateless: every question synchronizes the vault, retrie
 
 ## Demo
 
-This end-to-end example shows the app synchronizing the vault, combining semantic and keyword retrieval, requesting a grounded hosted answer, validating its citation, displaying the cited source passage, and exposing retrieval diagnostics.
+This demo captures a real user case: the user could not remember the exact fact and had only a vague, partly incorrect impression of what they wanted to ask. The relevant detail appeared in one small passage within a six-document, 5,775-chunk vault.
 
 ![Personal RAG question-to-citation flow](docs/assets/question-answer-flow.gif)
 
-Demo question: “What is the name of the luxury brand that had a naming problem because its customers were female, but the name indicated male?” The grounded answer is **Charlie**, Revlon’s women’s perfume, cited to the relevant passage in *Positioning: The Battle for Your Mind*.
+The user asked: “What is the name of the luxury brand that had a naming problem because its customers were female, but the name indicated male?” Despite the vague wording and false premise, the system synchronized the vault, combined semantic and keyword retrieval, found the relevant page, and answered **Charlie**, Revlon’s women’s perfume, with a citation to *Positioning: The Battle for Your Mind*.
 
-> **Correction:** The question contains a false premise. Charlie did **not** have a naming problem. The book presents its masculine name as intentional, successful counter-positioning against the perfume category’s convention of feminine brand names. The GIF preserves the original wording because it records the original retrieval test.
+> **The system also corrected the user’s memory:** Charlie did **not** have a naming problem. The book presents its masculine name as intentional, successful counter-positioning against the perfume category’s convention of feminine brand names. The original query remains in the GIF because that imperfect recollection is the point of the demonstration.
 
 ## Requirements
 

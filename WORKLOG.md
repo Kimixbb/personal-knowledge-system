@@ -104,3 +104,11 @@
 - Decisions: Preserve the original question inside the GIF as an authentic record of the retrieval test, while explicitly labeling its premise as false in the surrounding documentation.
 - Blockers: None.
 - Next steps: None.
+
+## 2026-08-02 - Frame README demo as a real retrieval case
+
+- Task/phase: Explain why the Charlie query is representative of personal knowledge retrieval rather than merely a factual correction.
+- Progress: Reframed the README demo around a user who remembers only a vague, partly incorrect impression; a relevant fact contained in one small passage within a 5,775-chunk vault; and the system’s successful retrieval, citation, and correction of the user’s premise.
+- Decisions: Keep the imperfect original query visible because it demonstrates the system’s value under realistic memory uncertainty. Present the corrected interpretation as part of the successful answer rather than as an isolated disclaimer.
+- Blockers: None.
+- Next steps: None.
