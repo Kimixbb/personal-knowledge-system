@@ -31,3 +31,11 @@
 - Decisions: Continue suppressing uncited answers from the main answer panel, retain provider text only in the in-memory latest result, and display it only inside the existing debug expander. Do not write hosted responses or personal text to logs.
 - Blockers: The running Streamlit process uses `server.fileWatcherType=none`, so it must be restarted before the UI change appears.
 - Next steps: Restart Streamlit, repeat the question that produced `MissingCitation`, and inspect **Hosted model response (before citation validation)** to determine whether the model omitted citations, used a different format, or returned an evidence-insufficiency refusal.
+
+## 2026-08-02 — Stale Streamlit result compatibility
+
+- Task/phase: Prevent a live Streamlit session from crashing when it retains a pre-change `RAGResult` object without the new hosted-response field.
+- Progress: Made Retrieval Debug tolerate legacy session-state results and show a restart-and-retry explanation instead of raising `AttributeError`.
+- Decisions: Preserve the user's most recent visible result across ordinary reruns while treating newly added diagnostic fields as optional during an in-process code upgrade.
+- Blockers: A complete process restart remains necessary to reload the updated `RAGService` module and capture hosted response text for new questions.
+- Next steps: Stop the existing Streamlit server with `Ctrl+C`, start it again, and repeat the question.

@@ -130,8 +130,14 @@ def render_result(result: RAGResult, settings: Settings) -> None:
             st.markdown("**Exact hosted context**")
             st.code(result.exact_hosted_context or "No hosted request was made.", language=None)
             st.markdown("**Hosted model response (before citation validation)**")
+            hosted_response_text = getattr(result, "hosted_response_text", None)
+            if hosted_response_text is None:
+                hosted_response_text = (
+                    "This result predates hosted-response tracing. Restart the app "
+                    "and ask the question again."
+                )
             st.code(
-                result.hosted_response_text or "No hosted response was received.",
+                hosted_response_text or "No hosted response was received.",
                 language=None,
             )
 
