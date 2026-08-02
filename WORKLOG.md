@@ -88,3 +88,11 @@
 - Decisions: Leave the user’s existing `.env` unchanged because it already specifies `deepseek-v4-flash`.
 - Blockers: None.
 - Next steps: None.
+
+## 2026-08-02 - README end-to-end demo
+
+- Task/phase: Record a complete question-to-citation flow for the README using the live Streamlit app and local personal vault.
+- Progress: Used the in-app browser to ask the naming-problem question, captured the real synchronization, hybrid-retrieval, hosted-answer, citation, source, and Retrieval Debug states, assembled an optimized nine-frame GIF, and embedded it in the README. The live answer identified Revlon’s Charlie and cited the relevant page-70 passage from *Positioning: The Battle for Your Mind*. All 59 tests pass.
+- Decisions: Keep the demo focused on one deterministic question and show both the user-facing answer and transparent retrieval evidence. Store the generated artifact under `docs/assets` so the README remains portable.
+- Blockers: None.
+- Next steps: Re-record the GIF only when the visible question flow changes materially.

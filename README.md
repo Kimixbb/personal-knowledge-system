@@ -4,6 +4,14 @@ Personal RAG is a local-first Windows application for searching a private PDF, T
 
 The MVP is deliberately stateless: every question synchronizes the vault, retrieves from the current index, and creates a new two-message hosted request. Earlier questions and answers are never included.
 
+## Demo
+
+This end-to-end example shows the app synchronizing the vault, combining semantic and keyword retrieval, requesting a grounded hosted answer, validating its citation, displaying the cited source passage, and exposing retrieval diagnostics.
+
+![Personal RAG question-to-citation flow](docs/assets/question-answer-flow.gif)
+
+Demo question: “What is the name of the luxury brand that had a naming problem because its customers were female, but the name indicated male?” The grounded answer is **Charlie**, Revlon’s perfume, cited to the relevant passage in *Positioning: The Battle for Your Mind*.
+
 ## Requirements
 
 - Windows 10 or 11
