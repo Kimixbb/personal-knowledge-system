@@ -87,6 +87,7 @@ Retrieval is hybrid without a reranking stage. Each question collects five times
 - Answer outcomes stay distinct: an empty retrieval reports that no relevant passages were found; retrieved passages that still lack enough evidence produce a non-error insufficient-evidence result; and a provider refusal is shown separately from both. Uncited factual answers continue to fail citation validation.
 - While a question is running, the compact status display names the active stage: hosted-model initialization, vault change detection, hybrid retrieval, grounded-context construction, hosted answering, or citation validation. It finishes with the specific success or failure outcome.
 - **Retrieval Debug** shows ranks, hybrid relevance scores, separate dense and normalized keyword scores, deterministic chunk IDs, full passages, relative paths, pages, the exact two message bodies sent to the provider, and the hosted model's response before citation validation.
+- Answer citations such as `[S3]` are clickable superscripts that jump directly to the matching source passage below.
 - **Open File** validates the citation path inside `library` before asking Windows to open it with the default application.
 
 No raw document text is written to application logs. The SQLite manifest stores fingerprints, status, counts, safe error types, and timestamps—not extracted passages.

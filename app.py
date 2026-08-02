@@ -32,6 +32,7 @@ from personal_rag.synchronizer import (
     SynchronizationError,
     Synchronizer,
 )
+from personal_rag.ui_citations import source_anchor, source_linked_answer
 from personal_rag.ui_progress import sync_progress_label
 from personal_rag.vector_store import ChromaVectorStore
 
@@ -142,7 +143,13 @@ def render_result(result: RAGResult, settings: Settings) -> None:
         st.info(result.answer)
         st.caption(f"{result.provider} · {result.model}")
     elif result.answer:
-        st.markdown(result.answer)
+        st.markdown(
+            source_linked_answer(
+                result.answer,
+                {passage.source_id for passage in result.passages},
+            ),
+            unsafe_allow_html=True,
+        )
         st.caption(f"{result.provider} · {result.model}")
     if result.invalid_citations:
         st.warning(
@@ -155,6 +162,7 @@ def render_result(result: RAGResult, settings: Settings) -> None:
         for passage in result.passages:
             filename = PurePosixPath(passage.relative_path).name
             page_label = f" · page {passage.page}" if passage.page is not None else ""
+            st.markdown(source_anchor(passage.source_id), unsafe_allow_html=True)
             with st.container(border=True):
                 st.markdown(f"**[{passage.source_id}] {filename}**{page_label}")
                 st.caption(passage.relative_path)

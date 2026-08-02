@@ -128,3 +128,11 @@
 - Decisions: Keep the default benchmark deterministic and free of provider charges; execute but mark q25/q26 for manual hosted-answer review; exclude absent and conflict cases from the formal 26-case Recall@5 denominator while still requiring both conflict paths in automated checks; never touch the configured personal vault.
 - Validation: The live current-stack run completed all 30 cases with 28/28 automated checks passing and Recall@5 of 26/26 (100%). The two absent-information cases were recorded for review, and the complete unit suite passes with 67 tests.
 - Next steps: Use the JSON reports to compare future retrieval changes. Add opt-in hosted-answer evaluation only if provider cost and a grading policy are explicitly accepted.
+
+## 2026-08-02 — Clickable answer citations
+
+- Task/phase: Connect answer citations directly to their retrieved source passages.
+- Progress: Rendered every valid answer citation such as `[S3]` as a clickable superscript, added a stable matching anchor immediately before each source card, escaped hosted-model HTML before enabling the trusted citation markup, documented the interaction, and added focused regression coverage for repeated, unknown, and unsafe citation text.
+- Decisions: Link only source IDs present in the displayed passages and preserve the answer's existing Markdown formatting. Keep navigation native to the page without JavaScript or a custom component.
+- Validation: The focused citation tests pass (3/3), `git diff --check` passes, and the complete suite passes with 70 tests.
+- Next steps: Restart or launch Streamlit and confirm the jump behavior in the browser with a grounded answer containing multiple citations.
