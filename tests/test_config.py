@@ -33,3 +33,17 @@ def test_env_loader_accepts_external_vault_and_hides_keys_from_repr(
 
     assert settings.vault_path == (tmp_path / "external-vault").resolve()
     assert "do-not-display" not in repr(settings)
+
+
+def test_env_loader_uses_deepseek_v4_flash_as_the_default_model(
+    tmp_path: Path,
+) -> None:
+    repository = tmp_path / "repo"
+    repository.mkdir()
+    settings = Settings.from_env(
+        repository / ".env",
+        environ={"KNOWLEDGE_VAULT": str(tmp_path / "external-vault")},
+    )
+
+    assert settings.default_llm_provider == "deepseek"
+    assert settings.default_llm_model == "deepseek-v4-flash"

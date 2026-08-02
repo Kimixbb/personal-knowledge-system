@@ -80,3 +80,11 @@
 - Decisions: Treat authentication and model request schemas as separate concerns. Follow Moonshot's model matrix by omitting explicit temperature for all current Kimi models and omitting `thinking` for always-reasoning K3. Keep retrieval, prompting, and indexing unchanged.
 - Blockers: The configured Moonshot key receives HTTP 401 `Invalid Authentication` from the global endpoint. The China endpoint could not be reached from the verification environment, so a regional-key mismatch could not be ruled out.
 - Next steps: Replace or reissue the Moonshot API Platform key, or confirm whether it belongs to the China platform and configure the matching endpoint before repeating live provider acceptance checks.
+
+## 2026-08-02 - DeepSeek default model
+
+- Task/phase: Switch the DeepSeek default model to `deepseek-v4-flash`.
+- Progress: Updated the Settings fallback, Streamlit DeepSeek model fallback, and `.env.example`; added regression coverage for the configuration default. The full test suite passes with 59 tests.
+- Decisions: Leave the user’s existing `.env` unchanged because it already specifies `deepseek-v4-flash`.
+- Blockers: None.
+- Next steps: None.

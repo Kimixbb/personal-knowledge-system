@@ -44,7 +44,7 @@ class Settings:
     embedding_device: str = "cuda"
     embedding_batch_size: int = 16
     default_llm_provider: str = "deepseek"
-    default_llm_model: str = "deepseek-chat"
+    default_llm_model: str = "deepseek-v4-flash"
     deepseek_api_key: str = field(default="", repr=False)
     moonshot_api_key: str = field(default="", repr=False)
     openai_api_key: str = field(default="", repr=False)
@@ -92,7 +92,7 @@ class Settings:
                 "DEFAULT_LLM_PROVIDER", "deepseek"
             ).strip().lower(),
             default_llm_model=merged.get(
-                "DEFAULT_LLM_MODEL", "deepseek-chat"
+                "DEFAULT_LLM_MODEL", "deepseek-v4-flash"
             ).strip(),
             deepseek_api_key=merged.get("DEEPSEEK_API_KEY", "").strip(),
             moonshot_api_key=merged.get("MOONSHOT_API_KEY", "").strip(),

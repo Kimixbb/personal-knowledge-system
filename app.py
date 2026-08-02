@@ -216,7 +216,7 @@ provider_labels = {
     "openai-compatible": "OpenAI-compatible",
 }
 model_defaults = {
-    "deepseek": "deepseek-chat",
+    "deepseek": "deepseek-v4-flash",
     "kimi": "kimi-k3",
     "openai": "gpt-4.1-mini",
     "openai-compatible": settings.default_llm_model,
