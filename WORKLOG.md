@@ -144,3 +144,11 @@
 - Decisions: Preserve retrieval rank order in the cited subset, hide the Sources heading when nothing is cited, and keep uncited passages available only through Retrieval Debug rather than discarding them.
 - Validation: The focused source-display tests pass (5/5), `git diff --check` passes, and the complete suite passes with 72 tests.
 - Next steps: Restart or launch Streamlit and inspect a multi-source answer to confirm the final browser layout.
+
+## 2026-08-02 — Refresh README demo for source-navigation GUI
+
+- Task/phase: Re-record the README question-to-evidence animation after the answer and source presentation changes.
+- Progress: Reviewed the source-navigation GUI task, ran the current Streamlit app in the in-app browser, repeated the real-user Charlie query, and replaced the demo GIF with a nine-frame capture showing processing, clickable superscript citations, citation-to-source navigation, cited-only source cards, the complete retrieval table, and per-passage debug metadata and Open File actions.
+- Decisions: Keep the existing real-user-case narrative and GIF path so the README requires no structural change. Preserve the known `.test-tmp-citations-full` scratch directory untouched and outside the commit.
+- Validation: The replacement GIF contains 9 frames at 1280 × 720, uses deliberate reading pauses, and is 1,245,477 bytes. The complete suite passes with 72 tests.
+- Next steps: Re-record the demo only when the visible question, answer, source, or debug flow changes materially.
