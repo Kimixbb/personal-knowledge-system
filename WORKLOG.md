@@ -136,3 +136,11 @@
 - Decisions: Link only source IDs present in the displayed passages and preserve the answer's existing Markdown formatting. Keep navigation native to the page without JavaScript or a custom component.
 - Validation: The focused citation tests pass (3/3), `git diff --check` passes, and the complete suite passes with 70 tests.
 - Next steps: Restart or launch Streamlit and confirm the jump behavior in the browser with a grounded answer containing multiple citations.
+
+## 2026-08-02 — Cited-only source cards and complete retrieval details
+
+- Task/phase: Reduce main-answer source clutter while preserving full retrieval inspection.
+- Progress: Limited the main Sources section to passages cited by the validated answer; kept every retrieved passage in Retrieval Debug; and added the filename, relative path, exact page, bordered code-style chunk, and a separately keyed Open File action to each debug passage.
+- Decisions: Preserve retrieval rank order in the cited subset, hide the Sources heading when nothing is cited, and keep uncited passages available only through Retrieval Debug rather than discarding them.
+- Validation: The focused source-display tests pass (5/5), `git diff --check` passes, and the complete suite passes with 72 tests.
+- Next steps: Restart or launch Streamlit and inspect a multi-source answer to confirm the final browser layout.

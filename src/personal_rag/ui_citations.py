@@ -2,9 +2,18 @@ from __future__ import annotations
 
 import html
 import re
+from collections.abc import Iterable
+from typing import Protocol, TypeVar
 
 
 _CITATION_PATTERN = re.compile(r"\[(S\d+)\]")
+
+
+class SourcePassage(Protocol):
+    source_id: str
+
+
+_SourcePassageT = TypeVar("_SourcePassageT", bound=SourcePassage)
 
 
 def _source_target_id(source_id: str) -> str:
@@ -33,3 +42,13 @@ def source_linked_answer(answer: str, source_ids: set[str]) -> str:
 def source_anchor(source_id: str) -> str:
     """Return the trusted HTML anchor targeted by an answer citation."""
     return f'<span id="{_source_target_id(source_id)}"></span>'
+
+
+def cited_passages(
+    answer: str, passages: Iterable[_SourcePassageT]
+) -> tuple[_SourcePassageT, ...]:
+    """Keep displayed passages that are cited by the validated answer."""
+    cited_source_ids = set(_CITATION_PATTERN.findall(answer))
+    return tuple(
+        passage for passage in passages if passage.source_id in cited_source_ids
+    )

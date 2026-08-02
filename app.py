@@ -23,7 +23,7 @@ from personal_rag.rag_service import (
     RAGResultKind,
     RAGService,
 )
-from personal_rag.retrieval import Retriever
+from personal_rag.retrieval import RetrievedPassage, Retriever
 from personal_rag.synchronizer import (
     IndexConfigurationMismatch,
     SyncProgress,
@@ -32,7 +32,11 @@ from personal_rag.synchronizer import (
     SynchronizationError,
     Synchronizer,
 )
-from personal_rag.ui_citations import source_anchor, source_linked_answer
+from personal_rag.ui_citations import (
+    cited_passages,
+    source_anchor,
+    source_linked_answer,
+)
 from personal_rag.ui_progress import sync_progress_label
 from personal_rag.vector_store import ChromaVectorStore
 
@@ -120,6 +124,22 @@ def run_sync_with_status(
     return result
 
 
+def render_open_file_button(
+    passage: RetrievedPassage,
+    settings: Settings,
+    *,
+    key_prefix: str,
+) -> None:
+    if st.button(
+        "Open File",
+        key=f"{key_prefix}-{passage.chunk_id}-{passage.rank}",
+    ):
+        try:
+            open_vault_file(passage.relative_path, settings.vault_path)
+        except (OSError, UnsafePathError) as exc:
+            st.error(f"Could not open this source ({type(exc).__name__}).")
+
+
 def render_result(result: RAGResult, settings: Settings) -> None:
     st.subheader("Answer")
     result_kind = getattr(result, "kind", RAGResultKind.ANSWERED)
@@ -157,9 +177,10 @@ def render_result(result: RAGResult, settings: Settings) -> None:
             + ", ".join(result.invalid_citations)
         )
 
-    if result.passages:
+    displayed_passages = cited_passages(result.answer, result.passages)
+    if displayed_passages:
         st.subheader("Sources")
-        for passage in result.passages:
+        for passage in displayed_passages:
             filename = PurePosixPath(passage.relative_path).name
             page_label = f" · page {passage.page}" if passage.page is not None else ""
             st.markdown(source_anchor(passage.source_id), unsafe_allow_html=True)
@@ -167,14 +188,7 @@ def render_result(result: RAGResult, settings: Settings) -> None:
                 st.markdown(f"**[{passage.source_id}] {filename}**{page_label}")
                 st.caption(passage.relative_path)
                 st.write(passage.content)
-                if st.button(
-                    "Open File",
-                    key=f"open-{passage.chunk_id}-{passage.rank}",
-                ):
-                    try:
-                        open_vault_file(passage.relative_path, settings.vault_path)
-                    except (OSError, UnsafePathError) as exc:
-                        st.error(f"Could not open this source ({type(exc).__name__}).")
+                render_open_file_button(passage, settings, key_prefix="source-open")
 
     if result.passages or result.exact_hosted_context:
         with st.expander("Retrieval Debug"):
@@ -193,8 +207,18 @@ def render_result(result: RAGResult, settings: Settings) -> None:
             if rows:
                 st.dataframe(rows, hide_index=True, width="stretch")
                 for passage in result.passages:
-                    st.markdown(f"**[{passage.source_id}] Full retrieved chunk**")
-                    st.code(passage.content, language=None)
+                    filename = PurePosixPath(passage.relative_path).name
+                    page = str(passage.page) if passage.page is not None else "Not available"
+                    with st.container(border=True):
+                        st.markdown(f"**[{passage.source_id}] {filename}**")
+                        st.caption(f"Path: `{passage.relative_path}`")
+                        st.caption(f"Page: {page}")
+                        st.code(passage.content, language=None)
+                        render_open_file_button(
+                            passage,
+                            settings,
+                            key_prefix="debug-open",
+                        )
             st.markdown("**Exact hosted context**")
             st.code(result.exact_hosted_context or "No hosted request was made.", language=None)
             st.markdown("**Hosted model response (before citation validation)**")

@@ -1,6 +1,17 @@
 from __future__ import annotations
 
-from personal_rag.ui_citations import source_anchor, source_linked_answer
+from dataclasses import dataclass
+
+from personal_rag.ui_citations import (
+    cited_passages,
+    source_anchor,
+    source_linked_answer,
+)
+
+
+@dataclass(frozen=True)
+class PassageStub:
+    source_id: str
 
 
 def test_source_linked_answer_turns_every_known_citation_into_a_superscript_link() -> None:
@@ -30,3 +41,17 @@ def test_source_linked_answer_escapes_model_html_and_leaves_unknown_ids_unlinked
 
 def test_source_anchor_targets_the_matching_answer_link() -> None:
     assert source_anchor("S3") == '<span id="source-s3"></span>'
+
+
+def test_cited_passages_hides_uncited_sources_without_reordering_matches() -> None:
+    passages = tuple(PassageStub(source_id) for source_id in ("S1", "S2", "S3"))
+
+    visible = cited_passages("Uses the third [S3] and first [S1].", passages)
+
+    assert visible == (passages[0], passages[2])
+
+
+def test_cited_passages_is_empty_when_the_displayed_answer_has_no_citations() -> None:
+    passages = (PassageStub("S1"), PassageStub("S2"))
+
+    assert cited_passages("No grounded answer is displayed.", passages) == ()
