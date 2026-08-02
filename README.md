@@ -70,7 +70,7 @@ Symlinks are not followed, hidden files are ignored, extension matching is case-
 - **Rebuild Index** is required when the embedding model/revision, dimensions, collection, or chunking configuration changes.
 - Browser imports are staged and verified in `.rag\temp`. Existing names require an explicit **Replace existing file** or **Cancel** choice; files are never automatically renamed.
 - Every non-empty question runs synchronization before retrieval. A changed-document failure blocks the hosted request so stale evidence is not returned unknowingly.
-- **Retrieval Debug** shows ranks, cosine relevance scores, deterministic chunk IDs, full passages, relative paths, pages, and the exact two message bodies sent to the provider.
+- **Retrieval Debug** shows ranks, cosine relevance scores, deterministic chunk IDs, full passages, relative paths, pages, the exact two message bodies sent to the provider, and the hosted model's response before citation validation.
 - **Open File** validates the citation path inside `library` before asking Windows to open it with the default application.
 
 No raw document text is written to application logs. The SQLite manifest stores fingerprints, status, counts, safe error types, and timestamps—not extracted passages.

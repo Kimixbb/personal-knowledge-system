@@ -29,6 +29,7 @@ class RAGResult:
     model: str
     passages: tuple[RetrievedPassage, ...] = ()
     exact_hosted_context: str = ""
+    hosted_response_text: str = ""
     invalid_citations: tuple[str, ...] = ()
     hosted_error: str | None = None
     usage_metadata: dict[str, Any] = field(default_factory=dict)
@@ -100,7 +101,8 @@ class RAGService:
                 hosted_error=type(exc).__name__,
             )
 
-        answer = normalize_response_text(response)
+        hosted_response_text = normalize_response_text(response)
+        answer = hosted_response_text
         answer, invalid_citations = _remove_invalid_citations(
             answer, {passage.source_id for passage in passages}
         )
@@ -113,6 +115,7 @@ class RAGService:
                 model=model,
                 passages=passages,
                 exact_hosted_context=prompt.exact_hosted_context,
+                hosted_response_text=hosted_response_text,
                 invalid_citations=invalid_citations,
                 hosted_error="MissingCitation",
             )
@@ -125,6 +128,7 @@ class RAGService:
             model=model,
             passages=passages,
             exact_hosted_context=prompt.exact_hosted_context,
+            hosted_response_text=hosted_response_text,
             invalid_citations=invalid_citations,
             usage_metadata=usage_metadata,
         )

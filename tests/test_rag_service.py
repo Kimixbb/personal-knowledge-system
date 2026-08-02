@@ -93,6 +93,7 @@ def test_invalid_model_citations_are_removed_and_reported() -> None:
     assert "[S1]" in result.answer
     assert "[S9]" not in result.answer
     assert result.invalid_citations == ("S9",)
+    assert result.hosted_response_text == "Claim [S1] and invented [S9]."
 
 
 def test_hosted_failure_retains_retrieval_debug_without_leaking_error_text() -> None:
@@ -104,6 +105,7 @@ def test_hosted_failure_retains_retrieval_debug_without_leaking_error_text() -> 
 
     assert result.answer == ""
     assert result.hosted_error == "RuntimeError"
+    assert result.hosted_response_text == ""
     assert result.passages[0].content == "Evidence for question"
     assert "Evidence for question" in result.exact_hosted_context
     assert "secret provider detail" not in result.hosted_error
@@ -121,4 +123,5 @@ def test_uncited_hosted_answer_is_not_displayed_as_grounded() -> None:
 
     assert result.answer == ""
     assert result.hosted_error == "MissingCitation"
+    assert result.hosted_response_text == "An answer without a source."
     assert result.passages

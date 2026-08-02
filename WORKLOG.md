@@ -23,3 +23,11 @@
 - Decisions: Continue supporting Python 3.11 and 3.12 while adding 3.13, with 3.14 intentionally excluded until separately verified. Ignore all `.venv*` directories so version-specific local environments cannot enter Git.
 - Blockers: The installed PyTorch 2.13.0 wheel is CPU-only (`torch.cuda.is_available()` is false). Qwen model-weight loading and hosted calls still require their first live run and user-owned API keys.
 - Next steps: Run the app from `.venv313`, configure `.env`, index the synthetic or personal vault, and perform live retrieval/provider acceptance checks. Install an appropriate CUDA-enabled PyTorch build later if GPU acceleration is desired.
+
+## 2026-08-02 — Hosted-response retrieval debug
+
+- Task/phase: Make citation-validation failures diagnosable without weakening grounded-answer enforcement.
+- Progress: Preserved the hosted model's normalized text before citation cleanup; exposed that response in Retrieval Debug for accepted and rejected answers; replaced the misleading `MissingCitation` API-failure message with a validation-specific explanation; updated the README; and added regression coverage for successful cleanup, hosted failures, and uncited responses. The complete Python 3.13 suite passes with 42 tests.
+- Decisions: Continue suppressing uncited answers from the main answer panel, retain provider text only in the in-memory latest result, and display it only inside the existing debug expander. Do not write hosted responses or personal text to logs.
+- Blockers: The running Streamlit process uses `server.fileWatcherType=none`, so it must be restarted before the UI change appears.
+- Next steps: Restart Streamlit, repeat the question that produced `MissingCitation`, and inspect **Hosted model response (before citation validation)** to determine whether the model omitted citations, used a different format, or returned an evidence-insufficiency refusal.

@@ -75,7 +75,13 @@ def show_sync_result(result) -> None:  # type: ignore[no-untyped-def]
 
 def render_result(result: RAGResult, settings: Settings) -> None:
     st.subheader("Answer")
-    if result.hosted_error:
+    if result.hosted_error == "MissingCitation":
+        st.error(
+            "The hosted response was rejected because it did not contain a valid "
+            "source citation such as [S1]. The original response is retained in "
+            "Retrieval Debug."
+        )
+    elif result.hosted_error:
         st.error(f"The hosted request failed ({result.hosted_error}). Retrieval debug is retained below.")
     elif result.answer:
         st.markdown(result.answer)
@@ -123,6 +129,11 @@ def render_result(result: RAGResult, settings: Settings) -> None:
                     st.code(passage.content, language=None)
             st.markdown("**Exact hosted context**")
             st.code(result.exact_hosted_context or "No hosted request was made.", language=None)
+            st.markdown("**Hosted model response (before citation validation)**")
+            st.code(
+                result.hosted_response_text or "No hosted response was received.",
+                language=None,
+            )
 
 
 try:
