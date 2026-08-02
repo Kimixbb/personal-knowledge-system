@@ -66,13 +66,15 @@ Put supported documents anywhere under `library`; File Explorer additions are de
 
 Symlinks are not followed, hidden files are ignored, extension matching is case-insensitive, and only `.pdf`, `.txt`, and `.md` are indexed. PDF pages are extracted and split independently so one-based page citations remain precise.
 
+Retrieval is hybrid without a reranking stage. Each question collects five times the final result count from both normalized Qwen cosine similarity and an in-memory Okapi BM25 keyword index built from the current Chroma chunks. BM25 scores are normalized against the strongest keyword match, then combined equally with dense relevance. The BM25 cache is invalidated automatically whenever chunks are added, replaced, deleted, or rebuilt.
+
 ## Using the app
 
 - **Refresh Index** scans for added, edited, and deleted files.
 - **Rebuild Index** is required when the embedding model/revision, dimensions, collection, or chunking configuration changes.
 - Browser imports are staged and verified in `.rag\temp`. Existing names require an explicit **Replace existing file** or **Cancel** choice; files are never automatically renamed.
 - Every non-empty question runs synchronization before retrieval. A changed-document failure blocks the hosted request so stale evidence is not returned unknowingly.
-- **Retrieval Debug** shows ranks, cosine relevance scores, deterministic chunk IDs, full passages, relative paths, pages, the exact two message bodies sent to the provider, and the hosted model's response before citation validation.
+- **Retrieval Debug** shows ranks, hybrid relevance scores, separate dense and normalized keyword scores, deterministic chunk IDs, full passages, relative paths, pages, the exact two message bodies sent to the provider, and the hosted model's response before citation validation.
 - **Open File** validates the citation path inside `library` before asking Windows to open it with the default application.
 
 No raw document text is written to application logs. The SQLite manifest stores fingerprints, status, counts, safe error types, and timestamps—not extracted passages.
@@ -96,7 +98,7 @@ Kimi-specific thinking and temperature constraints remain inside the provider fa
 .\.venv313\Scripts\python.exe -m pytest
 ```
 
-The unit suite uses fake embeddings, vector storage, and chat models, so it does not need model weights or API keys. It covers loaders, multilingual chunking, the SQLite manifest, new/change/delete synchronization, the August 1 → August 7 stale-data regression, provider switching, upload safety, retrieval filtering, grounded context, invalid citations, hosted failure debug, and question statelessness.
+The unit suite uses fake embeddings, vector storage, and chat models, so it does not need model weights or API keys. It covers loaders, multilingual chunking and BM25 matching, the SQLite manifest, new/change/delete synchronization, keyword-cache invalidation, the August 1 → August 7 stale-data regression, provider switching, upload safety, hybrid score blending, retrieval filtering, grounded context, invalid citations, hosted failure debug, and question statelessness.
 
 Live Qwen/Chroma and hosted-provider checks require the normal application dependencies, model download, suitable hardware, and user-owned keys. They are intentionally not invoked by the unit test suite.
 
@@ -108,4 +110,4 @@ Live Qwen/Chroma and hosted-provider checks require the normal application depen
 
 ## MVP boundaries
 
-There is no OCR, media transcription, EPUB support, automatic categorization, file movement, agent workflow, LangGraph, conversation memory, hybrid search, reranking, document history, cloud sync, or multi-user permission system.
+There is no OCR, media transcription, EPUB support, automatic categorization, file movement, agent workflow, LangGraph, conversation memory, reranking, document history, cloud sync, or multi-user permission system.

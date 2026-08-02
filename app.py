@@ -115,7 +115,9 @@ def render_result(result: RAGResult, settings: Settings) -> None:
             rows = [
                 {
                     "rank": passage.rank,
-                    "score": passage.score,
+                    "hybrid_score": passage.score,
+                    "dense_score": passage.metadata.get("dense_score", 0.0),
+                    "keyword_score": passage.metadata.get("keyword_score", 0.0),
                     "chunk_id": passage.chunk_id,
                     "relative_path": passage.relative_path,
                     "page": passage.page,
@@ -123,7 +125,7 @@ def render_result(result: RAGResult, settings: Settings) -> None:
                 for passage in result.passages
             ]
             if rows:
-                st.dataframe(rows, hide_index=True, use_container_width=True)
+                st.dataframe(rows, hide_index=True, width="stretch")
                 for passage in result.passages:
                     st.markdown(f"**[{passage.source_id}] Full retrieved chunk**")
                     st.code(passage.content, language=None)
@@ -220,7 +222,7 @@ with st.sidebar:
             st.write(f"{marker} {provider_labels[item.provider]}: {detail}")
 
     st.header("Actions")
-    if st.button("Refresh Index", use_container_width=True):
+    if st.button("Refresh Index", width="stretch"):
         with st.spinner("Synchronizing the vault…"):
             try:
                 show_sync_result(synchronizer.sync_library())
@@ -231,7 +233,7 @@ with st.sidebar:
     if st.button(
         "Rebuild Index",
         disabled=not confirm_rebuild,
-        use_container_width=True,
+        width="stretch",
     ):
         with st.spinner("Rebuilding the local index…"):
             show_sync_result(synchronizer.rebuild_index())
@@ -310,7 +312,7 @@ with st.form("question-form"):
     ask_clicked = st.form_submit_button(
         "Ask",
         disabled=not configured_providers,
-        use_container_width=True,
+        width="stretch",
     )
 
 if ask_clicked and question.strip():

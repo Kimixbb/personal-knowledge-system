@@ -47,3 +47,12 @@
 - Decisions: Keep the synthetic 30-case evaluation fixture unchanged; store user-owned corpus regressions separately; use the smallest values inside the agreed 300–400/50–75 range after 350/60 left a 248-word multi-topic chunk; and report retrieval measurements without promoting the example into the unit suite.
 - Blockers: The exact question still does not retrieve the page-70 Charlie passage in the top 200, so smaller chunks alone do not resolve this semantic mismatch.
 - Next steps: Treat `pv01` as a red manual evaluation and, when authorized, test the next recall strategy such as query expansion, adjacent-chunk retrieval, or hybrid lexical-plus-dense search.
+
+## 2026-08-02 — Hybrid BM25 retrieval
+
+- Task/phase: Combine the existing Qwen/Chroma similarity search with keyword/BM25 retrieval, without adding a reranking stage.
+- Progress: Added a lazy in-memory Okapi BM25 index over the current Chroma chunks, English possessive and CJK-aware tokenization, automatic keyword-cache invalidation after vector mutations, equal normalized dense/keyword score fusion, five-times candidate collection from each channel, separate component scores in Retrieval Debug, documentation, and generic unit coverage. All 46 tests pass. On the personal-vault Charlie evaluation, the target passage ranks 32nd with dense retrieval, 9th with BM25, and 7th with the configured hybrid retrieval, so it is included in the app's 20-passage answer context.
+- Decisions: Keep hybrid retrieval transparent and deterministic: normalize BM25 against the strongest keyword candidate, blend dense and keyword scores equally, and do not add a reranker. Keep the Charlie wording only in the manual personal-vault evaluation set.
+- Correction: The previous entry's statement that the Charlie passage was absent from the dense top 200 was caused by a Windows console curly-apostrophe detection error. ASCII-safe chunk-ID validation confirms the dense rank is 32.
+- Blockers: None.
+- Next steps: Observe answer quality and broader manual evaluation behavior before deciding whether another retrieval strategy is warranted.

@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
+from threading import RLock
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
+
+from personal_rag.bm25 import BM25Index
 
 
 class ChromaVectorStore:
@@ -22,6 +25,25 @@ class ChromaVectorStore:
             persist_directory=str(persist_directory),
             collection_metadata={"hnsw:space": "cosine"},
         )
+        self._keyword_lock = RLock()
+        self._keyword_index: BM25Index | None = None
+
+    def _load_keyword_index(self) -> BM25Index:
+        with self._keyword_lock:
+            if self._keyword_index is None:
+                result = self._store.get(include=["documents", "metadatas"])
+                contents = result.get("documents") or []
+                metadatas = result.get("metadatas") or []
+                documents = [
+                    Document(
+                        page_content=str(content),
+                        metadata=dict(metadata or {}),
+                    )
+                    for content, metadata in zip(contents, metadatas, strict=True)
+                    if content
+                ]
+                self._keyword_index = BM25Index(documents)
+            return self._keyword_index
 
     def _ids_for_document(self, document_id: str) -> list[str]:
         result = self._store.get(
@@ -33,7 +55,9 @@ class ChromaVectorStore:
         if len(chunks) != len(chunk_ids):
             raise ValueError("Each chunk must have exactly one deterministic ID")
         if chunks:
-            self._store.add_documents(list(chunks), ids=list(chunk_ids))
+            with self._keyword_lock:
+                self._store.add_documents(list(chunks), ids=list(chunk_ids))
+                self._keyword_index = None
 
     def replace_document(
         self,
@@ -43,32 +67,45 @@ class ChromaVectorStore:
     ) -> None:
         """Embed/add first so an embedding failure leaves the old document intact."""
 
-        old_ids = self._ids_for_document(document_id)
-        old_id_set = set(old_ids)
-        missing_chunks: list[Document] = []
-        missing_ids: list[str] = []
-        for chunk, chunk_id in zip(chunks, chunk_ids, strict=True):
-            if chunk_id not in old_id_set:
-                missing_chunks.append(chunk)
-                missing_ids.append(chunk_id)
-        self.add_chunks(missing_chunks, missing_ids)
-        new_ids = set(chunk_ids)
-        obsolete = [chunk_id for chunk_id in old_ids if chunk_id not in new_ids]
-        if obsolete:
-            self._store.delete(ids=obsolete)
+        with self._keyword_lock:
+            old_ids = self._ids_for_document(document_id)
+            old_id_set = set(old_ids)
+            missing_chunks: list[Document] = []
+            missing_ids: list[str] = []
+            for chunk, chunk_id in zip(chunks, chunk_ids, strict=True):
+                if chunk_id not in old_id_set:
+                    missing_chunks.append(chunk)
+                    missing_ids.append(chunk_id)
+            if missing_chunks:
+                self._store.add_documents(missing_chunks, ids=missing_ids)
+            new_ids = set(chunk_ids)
+            obsolete = [chunk_id for chunk_id in old_ids if chunk_id not in new_ids]
+            if obsolete:
+                self._store.delete(ids=obsolete)
+            if missing_chunks or obsolete:
+                self._keyword_index = None
 
     def delete_document(self, document_id: str) -> None:
-        chunk_ids = self._ids_for_document(document_id)
-        if chunk_ids:
-            self._store.delete(ids=chunk_ids)
+        with self._keyword_lock:
+            chunk_ids = self._ids_for_document(document_id)
+            if chunk_ids:
+                self._store.delete(ids=chunk_ids)
+                self._keyword_index = None
 
     def similarity_search_with_scores(
         self, query: str, k: int
     ) -> list[tuple[Document, float]]:
         return self._store.similarity_search_with_relevance_scores(query, k=k)
 
+    def keyword_search_with_scores(
+        self, query: str, k: int
+    ) -> list[tuple[Document, float]]:
+        return self._load_keyword_index().search(query, k)
+
     def rebuild_collection(self) -> None:
-        self._store.reset_collection()
+        with self._keyword_lock:
+            self._store.reset_collection()
+            self._keyword_index = None
 
     def count_chunks(self) -> int:
         return int(self._store._collection.count())

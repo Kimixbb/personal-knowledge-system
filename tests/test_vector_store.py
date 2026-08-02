@@ -46,11 +46,18 @@ def test_persistent_chroma_replace_search_delete_and_rebuild(tmp_path: Path) -> 
     results = reopened.similarity_search_with_scores("apple", k=1)
     assert results[0][0].page_content == "apple fact"
     assert results[0][1] == 1.0
+    assert reopened.keyword_search_with_scores("apple", k=1)[0][0].page_content == (
+        "apple fact"
+    )
 
     orange = make_chunk("orange fact", "doc-1", "doc-1:new:0")
     reopened.replace_document("doc-1", [orange], ["doc-1:new:0"])
     assert reopened.count_chunks() == 1
     assert reopened.similarity_search_with_scores("orange", k=1)[0][0].page_content == (
+        "orange fact"
+    )
+    assert reopened.keyword_search_with_scores("apple", k=1) == []
+    assert reopened.keyword_search_with_scores("orange", k=1)[0][0].page_content == (
         "orange fact"
     )
 

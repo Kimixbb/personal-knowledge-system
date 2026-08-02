@@ -13,3 +13,5 @@ Recall@5 is `questions with the required passage in the top five / applicable qu
 ## Personal-vault regressions
 
 `personal_vault_evaluation_set.jsonl` records retrieval failures found against the user-owned vault. Run these separately from the synthetic fixture benchmark because their source documents are not committed to this repository. For each case, use the configured personal vault, rebuild after any chunking change, ask the question independently, and record whether the expected path and fact appear in the retrieved passages and grounded answer.
+
+For hybrid retrieval cases, record the final rank plus the dense and normalized keyword component scores shown in Retrieval Debug. These measurements evaluate first-stage score blending only; no reranker is present.
