@@ -91,7 +91,7 @@ Only fully configured providers appear in the selection list:
 | OpenAI | `ChatOpenAI` | `OPENAI_API_KEY` |
 | OpenAI-compatible | `ChatOpenAI` | `OPENAI_COMPATIBLE_API_KEY` and `OPENAI_COMPATIBLE_BASE_URL` |
 
-Kimi-specific thinking and temperature constraints remain inside the provider factory. Retrieval and prompting use only the common `llm.invoke(messages)` interface.
+Kimi-specific request constraints remain inside the provider factory. K2.5 and K2.6 use non-thinking mode without overriding the API-managed temperature; K3 uses its native always-reasoning defaults. Retrieval and prompting use only the common `llm.invoke(messages)` interface.
 
 ## Tests
 

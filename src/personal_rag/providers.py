@@ -86,7 +86,8 @@ def create_chat_model(
         raise ProviderConfigurationError(availability[provider].reason)
 
     chat_class = class_resolver(provider)
-    common: dict[str, Any] = {"model": model.strip(), "max_retries": 2}
+    model_name = model.strip()
+    common: dict[str, Any] = {"model": model_name, "max_retries": 2}
     if provider == "deepseek":
         return chat_class(
             **common,
@@ -94,11 +95,13 @@ def create_chat_model(
             temperature=0,
         )
     if provider == "kimi":
+        kimi_options: dict[str, Any] = {}
+        if model_name.lower().startswith(("kimi-k2.5", "kimi-k2.6")):
+            kimi_options["thinking"] = False
         return chat_class(
             **common,
+            **kimi_options,
             api_key=settings.moonshot_api_key,
-            thinking=False,
-            temperature=0.6,
         )
     if provider == "openai":
         return chat_class(

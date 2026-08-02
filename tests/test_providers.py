@@ -50,7 +50,7 @@ def test_only_fully_configured_providers_are_available(tmp_path) -> None:  # typ
     ("provider", "model", "expected"),
     [
         ("deepseek", "deepseek-chat", {"temperature": 0}),
-        ("kimi", "kimi-k2.5", {"thinking": False, "temperature": 0.6}),
+        ("kimi", "kimi-k2.5", {"thinking": False}),
         ("openai", "gpt-4.1-mini", {"temperature": 0}),
         (
             "openai-compatible",
@@ -74,6 +74,32 @@ def test_provider_specific_options_stay_inside_factory(
     assert chat.kwargs["model"] == model
     for key, value in expected.items():
         assert chat.kwargs[key] == value
+
+
+@pytest.mark.parametrize(
+    ("model", "expected", "absent"),
+    [
+        ("kimi-k2.5", {"thinking": False}, {"temperature"}),
+        ("kimi-k2.6", {"thinking": False}, {"temperature"}),
+        ("kimi-k3", {}, {"thinking", "temperature"}),
+    ],
+)
+def test_kimi_request_options_follow_model_family(
+    tmp_path,  # type: ignore[no-untyped-def]
+    model: str,
+    expected: dict[str, object],
+    absent: set[str],
+) -> None:
+    chat = create_chat_model(
+        "kimi",
+        model,
+        settings_with_keys(tmp_path),
+        class_resolver=lambda _: FakeChatModel,
+    )
+
+    for key, value in expected.items():
+        assert chat.kwargs[key] == value
+    assert absent.isdisjoint(chat.kwargs)
 
 
 def test_missing_key_is_rejected_before_importing_provider(tmp_path) -> None:  # type: ignore[no-untyped-def]
@@ -102,6 +128,8 @@ def test_real_provider_integrations_construct_without_calling_network(tmp_path) 
     models = [
         create_chat_model("deepseek", "deepseek-chat", settings),
         create_chat_model("kimi", "kimi-k2.5", settings),
+        create_chat_model("kimi", "kimi-k2.6", settings),
+        create_chat_model("kimi", "kimi-k3", settings),
         create_chat_model("openai", "gpt-4.1-mini", settings),
         create_chat_model("openai-compatible", "custom-chat", settings),
     ]
@@ -109,6 +137,14 @@ def test_real_provider_integrations_construct_without_calling_network(tmp_path) 
     assert [type(model).__name__ for model in models] == [
         "ChatDeepSeek",
         "ChatMoonshot",
+        "ChatMoonshot",
+        "ChatMoonshot",
         "ChatOpenAI",
         "ChatOpenAI",
     ]
+    assert models[1].thinking is False
+    assert models[1].temperature is None
+    assert models[2].thinking is False
+    assert models[2].temperature is None
+    assert models[3].thinking is None
+    assert models[3].temperature is None

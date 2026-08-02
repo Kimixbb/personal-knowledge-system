@@ -72,3 +72,11 @@
 - Decisions: Report only real synchronous boundaries rather than simulated percentages; keep unchanged-file scans concise by omitting stages that do not run; and preserve the separately committed question-processing status behavior.
 - Blockers: A running Streamlit process would require one restart to load the new synchronization callback API. No app was listening during final validation.
 - Next steps: Start Streamlit and import a document to visually confirm the live labels against CPU, disk, and GPU activity.
+
+## 2026-08-02 - Kimi model-family compatibility
+
+- Task/phase: Diagnose Kimi K2.5/K2.6 failures and make the hosted-model factory compatible with Kimi K3.
+- Progress: Confirmed live calls to K2.5, K2.6, and K3 all fail authentication with the configured key; updated Kimi request construction so K2.5/K2.6 use non-thinking mode without overriding API-managed temperature while K3 receives no K2-only parameters; changed the Kimi UI default to `kimi-k3`; documented the model-family behavior; and added regression coverage against both fake and installed `ChatMoonshot` integrations. All 58 tests pass.
+- Decisions: Treat authentication and model request schemas as separate concerns. Follow Moonshot's model matrix by omitting explicit temperature for all current Kimi models and omitting `thinking` for always-reasoning K3. Keep retrieval, prompting, and indexing unchanged.
+- Blockers: The configured Moonshot key receives HTTP 401 `Invalid Authentication` from the global endpoint. The China endpoint could not be reached from the verification environment, so a regional-key mismatch could not be ruled out.
+- Next steps: Replace or reissue the Moonshot API Platform key, or confirm whether it belongs to the China platform and configure the matching endpoint before repeating live provider acceptance checks.
