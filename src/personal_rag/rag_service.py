@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Any, Protocol
 
 from personal_rag.prompting import build_grounded_prompt
@@ -19,6 +21,17 @@ class PassageRetriever(Protocol):
 
 class ChatModel(Protocol):
     def invoke(self, messages: Any) -> Any: ...
+
+
+class QuestionStage(StrEnum):
+    SYNCHRONIZING = "Checking the vault for file changes…"
+    RETRIEVING = "Running semantic and keyword retrieval…"
+    PREPARING_CONTEXT = "Building the grounded source context…"
+    REQUESTING_ANSWER = "Waiting for the hosted model to answer…"
+    VALIDATING_CITATIONS = "Validating the answer's source citations…"
+
+
+StageCallback = Callable[[QuestionStage], None]
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +83,7 @@ class RAGService:
         *,
         provider: str,
         model: str,
+        on_stage: StageCallback | None = None,
     ) -> RAGResult:
         question = question.strip()
         if not question:
@@ -77,7 +91,12 @@ class RAGService:
                 question="", answer="", provider=provider, model=model
             )
 
+        if on_stage is not None:
+            on_stage(QuestionStage.SYNCHRONIZING)
         self.synchronizer.sync_library(raise_on_errors=True)
+
+        if on_stage is not None:
+            on_stage(QuestionStage.RETRIEVING)
         passages = tuple(self.retriever.retrieve(question))
         if not passages:
             return RAGResult(
@@ -87,7 +106,12 @@ class RAGService:
                 model=model,
             )
 
+        if on_stage is not None:
+            on_stage(QuestionStage.PREPARING_CONTEXT)
         prompt = build_grounded_prompt(question, passages)
+
+        if on_stage is not None:
+            on_stage(QuestionStage.REQUESTING_ANSWER)
         try:
             response = llm.invoke(list(prompt.messages))
         except Exception as exc:
@@ -101,6 +125,8 @@ class RAGService:
                 hosted_error=type(exc).__name__,
             )
 
+        if on_stage is not None:
+            on_stage(QuestionStage.VALIDATING_CITATIONS)
         hosted_response_text = normalize_response_text(response)
         answer = hosted_response_text
         answer, invalid_citations = _remove_invalid_citations(

@@ -74,6 +74,7 @@ Retrieval is hybrid without a reranking stage. Each question collects five times
 - **Rebuild Index** is required when the embedding model/revision, dimensions, collection, or chunking configuration changes.
 - Browser imports are staged and verified in `.rag\temp`. Existing names require an explicit **Replace existing file** or **Cancel** choice; files are never automatically renamed.
 - Every non-empty question runs synchronization before retrieval. A changed-document failure blocks the hosted request so stale evidence is not returned unknowingly.
+- While a question is running, the compact status display names the active stage: hosted-model initialization, vault change detection, hybrid retrieval, grounded-context construction, hosted answering, or citation validation. It finishes with the specific success or failure outcome.
 - **Retrieval Debug** shows ranks, hybrid relevance scores, separate dense and normalized keyword scores, deterministic chunk IDs, full passages, relative paths, pages, the exact two message bodies sent to the provider, and the hosted model's response before citation validation.
 - **Open File** validates the citation path inside `library` before asking Windows to open it with the default application.
 

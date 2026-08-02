@@ -16,7 +16,7 @@ from personal_rag.file_actions import (
 )
 from personal_rag.manifest import Manifest
 from personal_rag.providers import available_providers, create_chat_model
-from personal_rag.rag_service import RAGResult, RAGService
+from personal_rag.rag_service import QuestionStage, RAGResult, RAGService
 from personal_rag.retrieval import Retriever
 from personal_rag.synchronizer import (
     IndexConfigurationMismatch,
@@ -316,22 +316,65 @@ with st.form("question-form"):
     )
 
 if ask_clicked and question.strip():
+    current_task = ["Initializing the selected hosted model…"]
+    question_status = st.status(
+        current_task[0],
+        expanded=False,
+        type="compact",
+    )
+
+    def show_question_stage(stage: QuestionStage) -> None:
+        label = str(stage)
+        if stage is QuestionStage.REQUESTING_ANSWER:
+            label = f"Waiting for {provider_labels[provider]} ({model}) to answer…"
+        current_task[0] = label
+        question_status.update(label=label)
+
     try:
-        with st.spinner("Synchronizing the vault before retrieval…"):
-            llm = create_chat_model(provider, model, settings)
-            result = rag_service.ask(
-                question,
-                llm,
-                provider=provider,
-                model=model,
+        llm = create_chat_model(provider, model, settings)
+        result = rag_service.ask(
+            question,
+            llm,
+            provider=provider,
+            model=model,
+            on_stage=show_question_stage,
+        )
+        if result.hosted_error == "MissingCitation":
+            question_status.update(
+                label="The hosted answer failed source-citation validation.",
+                state="error",
             )
+        elif result.hosted_error:
+            question_status.update(
+                label=f"The {provider_labels[provider]} request failed.",
+                state="error",
+            )
+        elif not result.passages:
+            question_status.update(
+                label="Retrieval finished — no relevant passages were found.",
+                state="complete",
+            )
+        else:
+            question_status.update(label="Answer ready.", state="complete")
         st.session_state.last_result = result
     except SynchronizationError as exc:
+        question_status.update(
+            label="Vault synchronization failed; the question was stopped.",
+            state="error",
+        )
         st.error("The vault could not be synchronized, so no hosted request was made.")
         show_sync_result(exc.result)
     except IndexConfigurationMismatch as exc:
+        question_status.update(
+            label="The local index configuration needs attention.",
+            state="error",
+        )
         st.error(str(exc))
     except Exception as exc:
+        question_status.update(
+            label=f"Failed while {current_task[0].removesuffix('…').lower()}.",
+            state="error",
+        )
         st.error(f"The question could not be processed ({type(exc).__name__}).")
 
 if "last_result" in st.session_state:

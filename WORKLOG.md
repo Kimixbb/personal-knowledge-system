@@ -56,3 +56,11 @@
 - Correction: The previous entry's statement that the Charlie passage was absent from the dense top 200 was caused by a Windows console curly-apostrophe detection error. ASCII-safe chunk-ID validation confirms the dense rank is 32.
 - Blockers: None.
 - Next steps: Observe answer quality and broader manual evaluation behavior before deciding whether another retrieval strategy is warranted.
+
+## 2026-08-02 — Live question-processing status
+
+- Task/phase: Replace the question form's single synchronization spinner with accurate live feedback for the complete RAG pipeline.
+- Progress: Added typed stage notifications at the actual RAG service boundaries; connected them to a compact Streamlit status display; identified the selected provider and model while waiting for the hosted answer; and added specific completion states for grounded answers, insufficient retrieval, provider failures, citation-validation failures, synchronization failures, and index-configuration failures.
+- Decisions: Keep stage reporting optional and side-effect free outside the GUI, and report only real operation boundaries rather than simulated percentages.
+- Blockers: None.
+- Next steps: Restart or refresh the running Streamlit app and ask a question to confirm that each live stage is visible with the configured provider.

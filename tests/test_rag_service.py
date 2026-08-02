@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from langchain_core.messages import AIMessage
 
-from personal_rag.rag_service import RAGService
+from personal_rag.rag_service import QuestionStage, RAGService
 from personal_rag.retrieval import RetrievedPassage
 
 
@@ -66,6 +66,45 @@ def test_each_question_synchronizes_and_sends_no_previous_history() -> None:
     assert "second question" in second_text
     assert "first question" not in second_text
     assert len(llm.calls[1]) == 2
+
+
+def test_question_progress_reports_each_real_processing_stage_in_order() -> None:
+    stages: list[QuestionStage] = []
+    service = RAGService(FakeSynchronizer(), QuestionRetriever())
+
+    service.ask(
+        "question",
+        RecordingLLM(),
+        provider="deepseek",
+        model="chat",
+        on_stage=stages.append,
+    )
+
+    assert stages == [
+        QuestionStage.SYNCHRONIZING,
+        QuestionStage.RETRIEVING,
+        QuestionStage.PREPARING_CONTEXT,
+        QuestionStage.REQUESTING_ANSWER,
+        QuestionStage.VALIDATING_CITATIONS,
+    ]
+
+
+def test_question_progress_stops_after_retrieval_when_evidence_is_insufficient() -> None:
+    stages: list[QuestionStage] = []
+    service = RAGService(FakeSynchronizer(), EmptyRetriever())
+
+    service.ask(
+        "question",
+        RecordingLLM(),
+        provider="deepseek",
+        model="chat",
+        on_stage=stages.append,
+    )
+
+    assert stages == [
+        QuestionStage.SYNCHRONIZING,
+        QuestionStage.RETRIEVING,
+    ]
 
 
 def test_no_useful_retrieval_refuses_locally_in_question_language() -> None:
