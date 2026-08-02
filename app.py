@@ -17,7 +17,12 @@ from personal_rag.file_actions import (
 )
 from personal_rag.manifest import Manifest
 from personal_rag.providers import available_providers, create_chat_model
-from personal_rag.rag_service import QuestionStage, RAGResult, RAGService
+from personal_rag.rag_service import (
+    QuestionStage,
+    RAGResult,
+    RAGResultKind,
+    RAGService,
+)
 from personal_rag.retrieval import Retriever
 from personal_rag.synchronizer import (
     IndexConfigurationMismatch,
@@ -116,7 +121,14 @@ def run_sync_with_status(
 
 def render_result(result: RAGResult, settings: Settings) -> None:
     st.subheader("Answer")
-    if result.hosted_error == "MissingCitation":
+    result_kind = getattr(result, "kind", RAGResultKind.ANSWERED)
+    if result_kind is RAGResultKind.HOSTED_REFUSAL:
+        st.warning(
+            "The hosted model refused to answer this request. This is separate "
+            "from retrieval: potentially relevant passages were found and are "
+            "retained below for inspection."
+        )
+    elif result.hosted_error == "MissingCitation":
         st.error(
             "The hosted response was rejected because it did not contain a valid "
             "source citation such as [S1]. The original response is retained in "
@@ -124,6 +136,11 @@ def render_result(result: RAGResult, settings: Settings) -> None:
         )
     elif result.hosted_error:
         st.error(f"The hosted request failed ({result.hosted_error}). Retrieval debug is retained below.")
+    elif result_kind is RAGResultKind.NO_RELEVANT_PASSAGES:
+        st.info(result.answer)
+    elif result_kind is RAGResultKind.INSUFFICIENT_EVIDENCE:
+        st.info(result.answer)
+        st.caption(f"{result.provider} · {result.model}")
     elif result.answer:
         st.markdown(result.answer)
         st.caption(f"{result.provider} · {result.model}")
@@ -406,7 +423,13 @@ if ask_clicked and question.strip():
             model=model,
             on_stage=show_question_stage,
         )
-        if result.hosted_error == "MissingCitation":
+        result_kind = getattr(result, "kind", RAGResultKind.ANSWERED)
+        if result_kind is RAGResultKind.HOSTED_REFUSAL:
+            question_status.update(
+                label=f"{provider_labels[provider]} refused the request.",
+                state="error",
+            )
+        elif result.hosted_error == "MissingCitation":
             question_status.update(
                 label="The hosted answer failed source-citation validation.",
                 state="error",
@@ -416,9 +439,14 @@ if ask_clicked and question.strip():
                 label=f"The {provider_labels[provider]} request failed.",
                 state="error",
             )
-        elif not result.passages:
+        elif result_kind is RAGResultKind.NO_RELEVANT_PASSAGES:
             question_status.update(
                 label="Retrieval finished — no relevant passages were found.",
+                state="complete",
+            )
+        elif result_kind is RAGResultKind.INSUFFICIENT_EVIDENCE:
+            question_status.update(
+                label="Relevant passages were found, but the evidence was insufficient.",
                 state="complete",
             )
         else:

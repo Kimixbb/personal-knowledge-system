@@ -112,3 +112,11 @@
 - Decisions: Keep the imperfect original query visible because it demonstrates the system’s value under realistic memory uncertainty. Present the corrected interpretation as part of the successful answer rather than as an isolated disclaimer.
 - Blockers: None.
 - Next steps: None.
+
+## 2026-08-02 - Distinct no-reference and refusal outcomes
+
+- Task/phase: Stop empty retrieval, insufficient retrieved evidence, and hosted-model refusal from collapsing into the same citation-error behavior.
+- Progress: Added explicit result kinds, a deterministic insufficient-evidence response token, provider-refusal metadata detection, distinct user-facing messages and status labels, and focused regression coverage.
+- Decisions: Treat no relevant passages and insufficient evidence as normal completed outcomes; preserve source passages for insufficient-evidence and refusal inspection; keep genuinely uncited factual answers as citation-validation errors.
+- Blockers: None.
+- Next steps: Restart the Streamlit app so the updated result model and status rendering are loaded.

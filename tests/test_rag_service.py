@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from langchain_core.messages import AIMessage
 
-from personal_rag.rag_service import QuestionStage, RAGService
+from personal_rag.rag_service import QuestionStage, RAGResultKind, RAGService
 from personal_rag.retrieval import RetrievedPassage
 
 
@@ -114,9 +114,49 @@ def test_no_useful_retrieval_refuses_locally_in_question_language() -> None:
 
     result = service.ask("我的生日是哪天？", llm, provider="deepseek", model="chat")
 
-    assert "没有找到足够的信息" in result.answer
+    assert "没有检索到" in result.answer
     assert llm.calls == []
     assert result.exact_hosted_context == ""
+    assert result.kind is RAGResultKind.NO_RELEVANT_PASSAGES
+
+
+def test_hosted_insufficient_evidence_is_not_a_citation_error() -> None:
+    service = RAGService(FakeSynchronizer(), QuestionRetriever())
+    llm = RecordingLLM("[[INSUFFICIENT_EVIDENCE]]")
+
+    result = service.ask(
+        "question",
+        llm,
+        provider="deepseek",
+        model="chat",
+    )
+
+    assert "passages" in result.answer
+    assert result.kind is RAGResultKind.INSUFFICIENT_EVIDENCE
+    assert result.hosted_error is None
+    assert result.passages
+    assert "[[INSUFFICIENT_EVIDENCE]]" in str(llm.calls[0][0].content)
+
+
+def test_hosted_model_refusal_is_distinct_from_missing_references() -> None:
+    service = RAGService(FakeSynchronizer(), QuestionRetriever())
+    refusal = AIMessage(
+        content="",
+        additional_kwargs={"refusal": "I cannot help with that request."},
+    )
+
+    result = service.ask(
+        "question",
+        type("RefusingLLM", (), {"invoke": lambda self, messages: refusal})(),
+        provider="openai",
+        model="chat",
+    )
+
+    assert result.answer == ""
+    assert result.kind is RAGResultKind.HOSTED_REFUSAL
+    assert result.hosted_error == "ModelRefusal"
+    assert result.hosted_response_text == "I cannot help with that request."
+    assert result.passages
 
 
 def test_invalid_model_citations_are_removed_and_reported() -> None:
